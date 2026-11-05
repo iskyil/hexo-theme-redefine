@@ -5,6 +5,11 @@ description: An HTML music player that can be used to play music throughout the 
 
 An HTML music player that can be used to play music throughout the entire blog. See the specific effects below.
 
+The theme loads APlayer asynchronously only when the player is enabled and audio
+entries are configured. Audio preloading is set to `none`, letting the browser
+fetch audio as needed for playback. Swup navigation preserves the player
+instance and playback state.
+
 ```yaml
 plugins:
   aplayer: # APlayer (fixed version)

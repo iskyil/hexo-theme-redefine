@@ -41,6 +41,10 @@ with source maps under `source/js/build/dev/`, while Tailwind recompiles
 `styles/theme.css`. Refresh the browser manually after JavaScript changes; the
 development command does not provide live reload.
 
+The development entry remains `source/js/build/dev/main.js`. Split chunks use
+`chunks/[name]-[hash].js` names to prevent filename collisions between shared
+chunks.
+
 </div>
 
 ## Demo Site And Deployment Modes
@@ -96,6 +100,60 @@ The theme style pipeline no longer contains Stylus, and the demo site no longer
 depends on `hexo-renderer-stylus`. Published packages contain the native CSS and
 Tailwind outputs required at runtime, so consuming Hexo sites do not need a
 stylesheet renderer.
+
+### Optional Script Loading
+
+On the initial page view and after each Swup navigation, `source/js/main.js`
+loads feature modules and their dependencies according to the configuration
+and current DOM. New optional features should use this page initialization
+flow and check the page's abort signal after asynchronous loading completes.
+
+| Dependency   | Loading condition                                                                         |
+| ------------ | ----------------------------------------------------------------------------------------- |
+| Moment       | The current page contains essay dates                                                     |
+| Typed        | Subtitle animation is enabled and the current page contains its container                 |
+| Mermaid      | Mermaid is enabled and the current page contains a diagram                                |
+| MiniMasonry  | The current page contains a gallery container                                             |
+| Pangu        | Chinese/English spacing is enabled and the current page contains article content          |
+| Comment SDKs | Comments are enabled for the current page and the comment section approaches the viewport |
+| EXIF reader  | The reader first opens an image's EXIF information panel                                  |
+| APlayer      | The player is enabled, audio entries are configured, and a player container is present    |
+
+Use dynamic `import()` for ES modules and the shared `loadScriptOnce()` for
+third-party scripts that expose globals. The loader caches promises by URL,
+reuses pending or completed loads, and clears failed entries to allow retries.
+Script URLs still use the theme's asset resolution logic, preserving development
+mode, production builds, subdirectory deployments, and CDN configuration.
+
+Waline, Gitalk, Twikoo, Giscus, Utterances, and Artalk share the comment loading
+controller. Giscus and Utterances bootstrap scripts must execute once for each
+new container, so they cannot be deduplicated as global SDKs; downloads can
+still use the browser's HTTP cache. Preserve `0`, `false`, and explicit issue
+numbers in page configuration rather than replacing valid values with `||`
+defaults.
+
+Loaded libraries can be reused across pages, while component instances and
+observers belong to the current page. Before replacing a page, clean up its
+observers and event handlers and cancel its pending initialization. Leaving one
+page must not interrupt a shared script load that another page may still need.
+Do not rely solely on EJS page conditions to emit scripts: navigating from
+another entry page through Swup could leave the destination without its
+dependencies.
+
+Before page replacement, the comment controller destroys instances such as
+Waline and Artalk that provide a destroy API. Color-mode events update mounted
+instances or iframes without polling for components. APlayer is a site-wide
+instance that persists across Swup navigation after loading and uses `none`
+for audio preloading. Swup and preloader animation dependencies still load
+initially when their corresponding features are enabled.
+
+The essays template renders readable `<time>` content at build time; after
+Moment loads, the browser formats dates from `datetime`. The comment controller
+uses `IntersectionObserver` to load comments ahead of the viewport, loads
+immediately when that API is unavailable, and provides loading feedback and
+retry after failure. Giscus still loads immediately when `loading: eager` is
+set. Validate direct entry, internal navigation, back/forward navigation, rapid
+navigation during loading, color-mode changes, and retry after a failed load.
 
 ## Preview Release Notes
 

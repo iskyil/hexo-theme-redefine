@@ -36,6 +36,8 @@ pnpm dev
 
 该命令会清理演示站生成的状态，将当前主题源代码链接到 `dev/site/themes/redefine`，在 `http://127.0.0.1:4000` 启动 Hexo，并同时监听浏览器端 JavaScript 和 CSS。esbuild 会在 `source/js/build/dev/` 下生成带 source map 的未压缩开发 bundle，Tailwind 则重新编译 `styles/theme.css`。修改 JavaScript 后需要手动刷新浏览器；开发命令不提供实时重载。
 
+开发入口固定为 `source/js/build/dev/main.js`，拆分的 chunk 使用 `chunks/[name]-[hash].js` 命名，避免多个共享 chunk 的文件名冲突。
+
 </div>
 
 ## 演示站与部署模式
@@ -69,6 +71,31 @@ CSS 和 JavaScript 的监听均由 `pnpm dev` 负责，因此这里不单独记�
 代码高亮主题只加载配置选中的浅色和深色资源；评论样式只加载已启用且受支持的评论系统资源；APlayer 样式仅在启用 APlayer 时加载。因此，这些可选样式保留在 `source/css/build/plugins/` 中，不会全部合并到核心 CSS。Number Flow 是应用依赖，由构建生成按需加载的 JavaScript chunk，并在启用页脚运行时间或工具栏阅读百分比时加载。
 
 主题样式管线不再包含 Stylus，演示站也已移除 `hexo-renderer-stylus`。发布包包含运行时所需的原生 CSS 和 Tailwind 构建结果，使用主题的 Hexo 站点无需安装样式表渲染器。
+
+### 可选脚本加载
+
+`source/js/main.js` 在首次打开页面和每次 Swup 页面切换后，根据功能配置和当前 DOM 按需加载功能模块及其依赖。新增可选功能时，应复用这个页面初始化流程，并在异步加载完成后检查页面取消信号。
+
+| 依赖        | 加载条件                                       |
+| ----------- | ---------------------------------------------- |
+| Moment      | 当前页面存在说说日期                           |
+| Typed       | 启用了副标题动画，且当前页面存在副标题容器     |
+| Mermaid     | 启用了 Mermaid，且当前页面存在图表             |
+| MiniMasonry | 当前页面存在相册容器                           |
+| Pangu       | 启用了中英文间距处理，且当前页面存在正文       |
+| 评论 SDK    | 当前页面启用了评论，且评论区接近可视区域       |
+| EXIF 解析器 | 读者首次打开图片的 EXIF 信息面板               |
+| APlayer     | 启用了播放器、配置了音频条目，且存在播放器容器 |
+
+ES 模块使用动态 `import()`；需要全局变量的第三方脚本使用共享的 `loadScriptOnce()`。加载函数按 URL 缓存 Promise，复用进行中或已完成的加载，失败后清除缓存以允许重试。脚本地址仍通过主题资源解析逻辑生成，保持开发模式、生产构建、子路径部署和 CDN 配置一致。
+
+Waline、Gitalk、Twikoo、Giscus、Utterances 和 Artalk 共用评论加载控制器。Giscus 和 Utterances 的引导脚本需要为每个新容器执行一次，不能按全局 SDK 去重；下载仍可利用浏览器 HTTP 缓存。页面配置中的 `0`、`false` 和指定 Issue 编号应原样传递，避免使用 `||` 默认值覆盖有效设置。
+
+库的加载结果可以跨页面复用，组件实例和观察器则属于当前页面。页面替换前应清理观察器和事件处理器，并取消旧页面的初始化；不要因为一个页面离开而中断其他页面可能继续使用的共享脚本加载。避免只依靠 EJS 页面条件输出脚本，否则直接打开其他页面后再通过 Swup 跳转时，目标页面可能缺少依赖。
+
+评论控制器在页面替换前销毁 Waline、Artalk 等提供销毁接口的实例。明暗模式通过事件更新已挂载的实例或 iframe，无需轮询等待组件出现。APlayer 属于全站实例，加载后跨 Swup 页面切换保留，并将音频预加载设为 `none`。启用了对应功能时，Swup 和预加载动画所需的初始依赖仍正常加载。
+
+说说模板在构建时输出可读的 `<time>` 内容，Moment 加载后再根据 `datetime` 格式化日期。评论控制器使用 `IntersectionObserver` 提前加载评论，浏览器不支持时直接加载，并提供加载状态与失败重试；Giscus 的 `loading: eager` 设置仍会立即加载。验证改动时，应覆盖直接打开、站内跳转、前进后退、加载期间快速切页、配色切换和失败后重试。
 
 ## 预览发布说明
 

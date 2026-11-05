@@ -1,6 +1,6 @@
 ---
 title: Comment System (comment)
-description: The theme supports five comment systems `waline`, `twikoo`, `gitalk`, `giscus`, and `utterances`. You can choose one according to your preference.
+description: The theme supports six comment systems `waline`, `twikoo`, `gitalk`, `giscus`, `utterances`, and `artalk`. You can choose one according to your preference.
 ---
 
 <Callout type="info">
@@ -26,9 +26,22 @@ Enable or disable comments.
 
 **Configuration: `comment.system`**
 
-|  Type  |                   Possible Values                    | Default  |
-| :----: | :--------------------------------------------------: | :------: |
-| String | `waline \| gitalk \| twikoo \| giscus \| utterances` | `waline` |
+|  Type  |                        Possible Values                         | Default  |
+| :----: | :------------------------------------------------------------: | :------: |
+| String | `waline \| gitalk \| twikoo \| giscus \| utterances \| artalk` | `waline` |
+
+## Loading Behavior
+
+All six comment systems load when the comment section approaches the viewport,
+with no extra configuration required. Browsers without visibility observation
+support load them immediately. Setting `comment.config.giscus.loading: eager`
+still loads Giscus immediately.
+
+The comment section displays loading feedback and offers a retry button if
+loading fails. When readers follow an internal link to another article, the
+theme initializes that page's comments, reuses cacheable resources, and cleans
+up the previous page's comment instances and event handlers. Comment interfaces
+that support light and dark themes follow the site's color mode.
 
 ## Waline Configuration
 
@@ -163,7 +176,7 @@ comment:
       emit_metadata: 0
       lang: en
       input_position: bottom
-      loading: not-lazy
+      loading: lazy # lazy loads on demand; eager loads immediately
 ```
 
 ## Utterances Configuration
@@ -199,3 +212,24 @@ comment:
 - `issue_term` defaults to `pathname`, recommended for single-page mode.
 - Setting `issue_number` will override `issue_term`.
 - `theme_light` and `theme_dark` automatically follow the site light/dark mode.
+
+## Artalk Configuration
+
+For more information about Artalk, visit the [Artalk website](https://artalk.js.org/).
+
+**Configuration item name: `comment.config.artalk`**
+
+After deploying an Artalk server, enter its URL and site name in
+`_config.redefine.yml`:
+
+```yaml filename="_config.redefine.yml"
+comment:
+  system: artalk
+  config:
+    artalk:
+      server: https://artalk.example.com
+      site: My Blog
+```
+
+Both `server` and `site` are required. The `site` value should match the site
+configuration on the Artalk server.

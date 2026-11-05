@@ -1,6 +1,6 @@
 ---
 title: 评论系统 (comment)
-description: Redefine 主题支持 `waline` `twikoo` `gitalk` `giscus` `utterances` 五种评论系统，你可以根据自己的喜好选择一种。
+description: Redefine 主题支持 `waline` `twikoo` `gitalk` `giscus` `utterances` `artalk` 六种评论系统，你可以根据自己的喜好选择一种。
 ---
 
 <Callout type="info">
@@ -28,9 +28,15 @@ description: Redefine 主题支持 `waline` `twikoo` `gitalk` `giscus` `utteranc
 
 **配置项名称：`comment.system`**
 
-|  类型  |                        可选值                        |  默认值  |
-| :----: | :--------------------------------------------------: | :------: |
-| 字符串 | `waline \| gitalk \| twikoo \| giscus \| utterances` | `waline` |
+|  类型  |                             可选值                             |  默认值  |
+| :----: | :------------------------------------------------------------: | :------: |
+| 字符串 | `waline \| gitalk \| twikoo \| giscus \| utterances \| artalk` | `waline` |
+
+## 加载行为
+
+六种评论系统默认都在评论区接近可视区域时加载，无需额外配置。浏览器不支持可见性检测时会直接加载；`comment.config.giscus.loading: eager` 仍可让 Giscus 立即加载。
+
+评论区会显示加载状态，加载失败时可以点击重试。通过站内链接切换文章后，主题会为新页面初始化对应的评论，复用可缓存的资源，并清理旧页面的评论实例和事件处理器。支持明暗主题的评论界面会跟随站点配色切换。
 
 ## Waline 配置
 
@@ -165,7 +171,7 @@ comment:
       emit_metadata: 0
       lang: en
       input_position: bottom
-      loading: not-lazy
+      loading: lazy # lazy 按需加载；eager 立即加载
 ```
 
 ## Utterances 配置
@@ -201,3 +207,22 @@ comment:
 - `issue_term` 默认是 `pathname`，单页模式推荐使用该值。
 - 配置 `issue_number` 后会忽略 `issue_term`。
 - `theme_light` 与 `theme_dark` 会跟随主题明暗模式自动切换。
+
+## Artalk 配置
+
+更多关于 Artalk 评论系统的信息，请访问 [Artalk 官网](https://artalk.js.org/)。
+
+**配置项名称：`comment.config.artalk`**
+
+部署 Artalk 服务端后，在 `_config.redefine.yml` 中填写服务端地址和站点名称：
+
+```yaml filename="_config.redefine.yml"
+comment:
+  system: artalk
+  config:
+    artalk:
+      server: https://artalk.example.com
+      site: My Blog
+```
+
+`server` 和 `site` 均为必填；`site` 应与 Artalk 服务端的站点配置一致。

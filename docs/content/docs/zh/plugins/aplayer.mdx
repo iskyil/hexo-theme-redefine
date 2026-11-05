@@ -5,6 +5,8 @@ description: 一个 HTML 音乐播放器，可以实现博客全站音乐播放�
 
 一个 HTML 音乐播放器，可以实现博客全站音乐播放，具体效果见下
 
+播放器启用且配置了音频条目后，主题才会异步加载 APlayer。音频预加载设为 `none`，由浏览器在播放需要时读取音频；通过 Swup 切换站内页面时会保留播放器实例和播放状态。
+
 ```yaml
 plugins:
     aplayer: # APlayer (fixed version)
