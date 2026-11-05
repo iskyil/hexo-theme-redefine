@@ -63,7 +63,6 @@ const buildJavaScript = async () => {
   await Promise.all([
     copyJavaScriptFiles(LIBS_DIR, path.join(BUILD_DIR, "libs")),
     buildApplication(),
-    buildStandalone({ source: "plugins/aplayer.js", output: "plugins/aplayer" }, "iife"),
     buildStandalone({ source: "plugins/hbe.js", output: "plugins/hbe" }, "esm"),
   ]);
 

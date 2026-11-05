@@ -122,6 +122,26 @@ const initGlobalsOnce = () => {
     );
   }
 
+  const aplayerAudios = theme.plugins?.aplayer?.audios;
+  const hasAplayerAudios =
+    Array.isArray(aplayerAudios) &&
+    aplayerAudios.some((audio) => audio && audio.url);
+  if (
+    theme.plugins?.aplayer?.enable &&
+    hasAplayerAudios &&
+    document.getElementById("aplayer")
+  ) {
+    lazyRun(
+      "aplayer:globals",
+      appSignal,
+      () => import("./plugins/aplayer.js"),
+      ({ default: initAPlayer }) => {
+        initAPlayer();
+      },
+      "aplayer",
+    );
+  }
+
   if (!didInitRefreshEvent) {
     didInitRefreshEvent = true;
     window.addEventListener(pageRefreshEvent, () => {
