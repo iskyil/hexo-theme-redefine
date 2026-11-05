@@ -22,6 +22,9 @@ post: 文章
 posts: 文章
 tagcloud: 標籤雲
 comment: 留言
+comments_loading: 正在載入評論…
+comments_load_failed: 評論載入失敗。
+comments_retry: 重試
 comments: 留言
 top: 頂端
 sticky: 置頂

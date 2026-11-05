@@ -216,6 +216,30 @@ test("theme build and generation configurations", async (t) => {
     assert.ok(postCategoryPaths[1].includes(">demo789</a>"));
   });
 
+  await t.test("optional vendor URLs are available without eager script tags", () => {
+    for (const route of ["index.html", "essays/index.html", "masonry/index.html", "2022/10/02/theme-demo/index.html"]) {
+      const output = readOutput(route);
+      const config = JSON.parse(output.match(/window\.theme = (.*);/)[1]);
+      assert.equal(config.assets.moment, "/js/build/libs/moment-with-locales.min.js");
+      assert.equal(config.assets.typed, "/js/build/libs/Typed.min.js");
+      assert.equal(config.assets.exif, "/js/build/libs/exif-reader.js");
+      assert.equal(config.assets.aplayer, "/js/build/libs/APlayer.min.js");
+      assert.equal(config.assets.waline, "/js/build/libs/waline.js");
+      assert.doesNotMatch(output, /<script[^>]+src=["'][^"']*(?:moment-with-locales|Typed|mermaid|minimasonry|pangu|exif-reader|APlayer|aplayer|waline|gitalk|twikoo|artalk|giscus|utteranc)[^"']*["']/);
+    }
+    const post = readOutput("2022/10/02/theme-demo/index.html");
+    includes(post, [
+      'data-comment-provider="waline"',
+      "data-waline-config=",
+      'data-comment-status role="status"',
+      "data-comment-retry hidden",
+    ]);
+    assert.doesNotMatch(post, /runWaline|redefineWalineInstance/);
+    const essays = readOutput("essays/index.html");
+    assert.doesNotMatch(essays, /Loading Date/);
+    assert.match(essays, /<time data-essay-date datetime="[^"]+"[^>]*>\d{4}-\d{2}-\d{2} \d{2}:\d{2}<\/time>/);
+  });
+
   await t.test("legacy and unknown templates use ordinary page rendering", () => {
     const pages = {
       "legacy-template/index.html": "links",
@@ -273,6 +297,18 @@ test("theme build and generation configurations", async (t) => {
     assert.ok(!home.includes("esm.sh"));
   });
 
+  await t.test("Twikoo renders escaped page configuration and a retry UI without eager scripts", () => {
+    const post = readOutput("2022/10/02/theme-demo/index.html");
+    includes(post, [
+      "data-twikoo", 'data-twikoo-env="https://comments.example.com"',
+      'data-twikoo-region="ap-shanghai"', 'data-comment-status role="status"',
+      "data-comment-retry hidden", 'id="twikoo-comment"',
+    ]);
+    assert.doesNotMatch(post, /<script[^>]+src=["'][^"']*twikoo/);
+    assert.doesNotMatch(post, /twikoo\.init|runTwikoo/);
+    assert.ok(!readOutput().includes("data-twikoo"));
+  });
+
   buildDevelopmentJavaScript();
   generateSite(path.join(ROOT, "dev", "site", "_config.dev.yml"));
 
@@ -282,10 +318,12 @@ test("theme build and generation configurations", async (t) => {
     const devChunks = path.join(ROOT, "source", "js", "build", "dev", "chunks");
 
     assert.ok(home.includes('src="/js/build/dev/main.js"'));
+    const config = JSON.parse(home.match(/window\.theme = (.*);/)[1]);
+    assert.equal(config.assets.typed, "/js/libs/Typed.min.js");
     assert.ok(!home.includes('type="importmap"'));
     assert.ok(fs.statSync(devMain).size > 0);
     assert.ok(
-      fs.readdirSync(devChunks).some((name) => name === "numberFlow.js"),
+      fs.readdirSync(devChunks).some((name) => /^numberFlow-[\w-]+\.js$/.test(name)),
     );
     assert.ok(outputExists("js/build/dev/main.js"));
     assert.ok(home.includes("https://events.ohevan.com/script.js"));

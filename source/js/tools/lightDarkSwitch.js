@@ -54,6 +54,9 @@ export const ModeToggle = {
     this.mermaidInit(this.mermaidLightTheme);
     this.setGiscusTheme();
     this.setUtterancesTheme();
+    window.dispatchEvent(
+      new CustomEvent("redefine:color-mode", { detail: { isDark: false } }),
+    );
   },
 
   enableDarkMode() {
@@ -68,21 +71,15 @@ export const ModeToggle = {
     this.mermaidInit(this.mermaidDarkTheme);
     this.setGiscusTheme();
     this.setUtterancesTheme();
+    window.dispatchEvent(
+      new CustomEvent("redefine:color-mode", { detail: { isDark: true } }),
+    );
   },
 
-  async setGiscusTheme(theme) {
-    if (!document.querySelector("#giscus-container")) {
+  setGiscusTheme(theme) {
+    const giscusFrame = document.querySelector("iframe.giscus-frame");
+    if (!giscusFrame?.contentWindow) {
       return;
-    }
-
-    let giscusFrame = document.querySelector("iframe.giscus-frame");
-    while (!giscusFrame) {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      giscusFrame = document.querySelector("iframe.giscus-frame");
-    }
-
-    while (giscusFrame.classList.contains("giscus-frame--loading")) {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
 
     theme ??= styleStatus.isDark ? "dark" : "light";
@@ -98,9 +95,12 @@ export const ModeToggle = {
     );
   },
 
-  async setUtterancesTheme(theme) {
-    const container = document.querySelector("#utterances-container");
-    if (!container) {
+  setUtterancesTheme(theme) {
+    const container = document.querySelector(
+      "[data-comment-provider='utterances'], #utterances-container",
+    );
+    const utterancesFrame = document.querySelector("iframe.utterances-frame");
+    if (!container || !utterancesFrame?.contentWindow) {
       return;
     }
 
@@ -109,18 +109,6 @@ export const ModeToggle = {
     const themeDark =
       container.dataset.utterancesThemeDark || "github-dark";
     theme ??= styleStatus.isDark ? themeDark : themeLight;
-
-    const maxAttempts = 10;
-    let utterancesFrame = document.querySelector("iframe.utterances-frame");
-
-    for (let attempt = 0; attempt < maxAttempts && !utterancesFrame; attempt += 1) {
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      utterancesFrame = document.querySelector("iframe.utterances-frame");
-    }
-
-    if (!utterancesFrame || !utterancesFrame.contentWindow) {
-      return;
-    }
 
     utterancesFrame.contentWindow.postMessage(
       { type: "set-theme", theme },

@@ -22,6 +22,9 @@ post: 記事
 posts: 記事
 tagcloud: タグクラウド
 comment: コメント
+comments_loading: コメントを読み込み中…
+comments_load_failed: コメントを読み込めませんでした。
+comments_retry: 再試行
 comments: コメント
 top: トップ
 sticky: 屋根

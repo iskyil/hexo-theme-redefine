@@ -289,6 +289,15 @@ const initPage = () => {
     );
   }
 
+  if (document.querySelector("[data-comment-provider], [data-twikoo]")) {
+    lazyRun(
+      "comments",
+      pageSignal,
+      () => import("./plugins/twikoo.js"),
+      ({ default: initTwikoo }) => initTwikoo({ signal: pageSignal }),
+    );
+  }
+
   if (theme.navbar?.search?.enable === true) {
     lazyRun(
       "localSearch",

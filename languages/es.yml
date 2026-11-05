@@ -22,6 +22,9 @@ post: Publicación
 posts: Publicaciones
 tagcloud: Nube de etiquetas
 comment: Comentario
+comments_loading: Cargando comentarios…
+comments_load_failed: No se pudieron cargar los comentarios.
+comments_retry: Reintentar
 comments: Comentarios
 home: Inicio
 archive: Archivo

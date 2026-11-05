@@ -1,5 +1,6 @@
 ---
 title: Tab Folding Nesting Test
+date: 2026-08-06 00:00:00
 tags:
   - "tabs"
   - "folding"

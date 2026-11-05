@@ -22,6 +22,9 @@ post: Post
 posts: Posts
 tagcloud: Nuage de tags
 comment: Commentaire
+comments_loading: Chargement des commentaires…
+comments_load_failed: Impossible de charger les commentaires.
+comments_retry: Réessayer
 comments: Commentaires
 home: Accueil
 archive: Archive

@@ -22,6 +22,9 @@ post: Post
 posts: Posts
 tagcloud: Tag Cloud
 comment: Comment
+comments_loading: Loading comments…
+comments_load_failed: Comments could not be loaded.
+comments_retry: Retry
 comments: Comments
 home: Home
 archive: Archive

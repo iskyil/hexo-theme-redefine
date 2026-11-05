@@ -22,6 +22,9 @@ post: 文章
 posts: 文章
 tagcloud: 标签云
 comment: 评论
+comments_loading: 正在加载评论…
+comments_load_failed: 评论加载失败。
+comments_retry: 重试
 comments: 评论
 top: 置顶
 sticky: 置顶

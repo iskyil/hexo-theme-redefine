@@ -29,6 +29,10 @@ theme_config:
   comment:
     enable: true
     system: twikoo
+    config:
+      twikoo:
+        server_url: https://comments.example.com
+        region: ap-shanghai
   footer:
     runtime: false
   plugins:
