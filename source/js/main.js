@@ -12,6 +12,7 @@ import initFooterRuntime from "./tools/runtime.js";
 import initScrollTopBottom from "./tools/scrollTopBottom.js";
 import { initTocToggle } from "./tools/tocToggle.js";
 import { initUtilsGlobals, initUtilsPage } from "./utils.js";
+import { loadScriptOnce } from "./utils/loadScript.js";
 import {
   getStyleStatus,
   setStyleStatus,
@@ -34,18 +35,21 @@ const safeRunAsync = (label, callback) => {
     });
 };
 
-const lazyRun = (label, signal, load, callback) => {
+const lazyRun = (label, signal, load, callback, vendor) => {
   if (signal?.aborted) {
     return;
   }
 
   safeRunAsync(label, async () => {
-    const module = await load();
+    const [module] = await Promise.all([
+      load(),
+      vendor ? loadScriptOnce(theme.assets?.[vendor]) : undefined,
+    ]);
     if (signal?.aborted) {
       return;
     }
 
-    callback(module);
+    return callback(module);
   });
 };
 
@@ -191,7 +195,7 @@ const initPage = () => {
     }
   });
 
-  if (document.querySelector("[data-essay-date]") && typeof moment !== "undefined") {
+  if (document.querySelector("[data-essay-date]")) {
     lazyRun(
       "essays",
       pageSignal,
@@ -199,6 +203,7 @@ const initPage = () => {
       ({ default: initEssays }) => {
         initEssays();
       },
+      "moment",
     );
   }
 
@@ -210,6 +215,7 @@ const initPage = () => {
       ({ default: initPangu }) => {
         initPangu();
       },
+      "pangu",
     );
   }
 
@@ -224,6 +230,7 @@ const initPage = () => {
       ({ default: initMermaid }) => {
         initMermaid();
       },
+      "mermaid",
     );
   }
 
@@ -235,6 +242,7 @@ const initPage = () => {
       ({ default: initMasonry }) => {
         initMasonry({ signal: pageSignal });
       },
+      "masonry",
     );
   }
 
@@ -249,14 +257,15 @@ const initPage = () => {
     subtitleEntries.length !== 0 ||
     (subtitleConfig.hitokoto && subtitleConfig.hitokoto.enable);
 
-  if (shouldInitTyped && location.pathname === config.root) {
+  if (shouldInitTyped && document.getElementById("subtitle")) {
     lazyRun(
       "typed",
       pageSignal,
       () => import("./plugins/typed.js"),
       ({ default: initTyped }) => {
-        initTyped("subtitle");
+        initTyped("subtitle", { signal: pageSignal });
       },
+      "typed",
     );
   }
 

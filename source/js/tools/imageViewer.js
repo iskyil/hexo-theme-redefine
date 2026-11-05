@@ -1,3 +1,5 @@
+import { loadScriptOnce } from "../utils/loadScript.js";
+
 const viewerState = {
   isBigImage: false,
   scale: 1,
@@ -566,6 +568,20 @@ const renderExifMessage = (message) => {
 const loadExifForImage = async (img) => {
   const requestId = bumpExifRequestId();
   renderExifMessage(t("exif.status.loading", "Loading..."));
+
+  if (!window.ExifReader && window.theme?.assets?.exif) {
+    try {
+      await loadScriptOnce(window.theme.assets.exif);
+    } catch (error) {
+      if (exifControls.requestId !== requestId) {
+        return;
+      }
+      renderExifMessage(
+        t("exif.status.library_missing", "EXIF library not loaded"),
+      );
+      return;
+    }
+  }
 
   const ExifReader = window.ExifReader;
   if (!ExifReader || typeof ExifReader.load !== "function") {

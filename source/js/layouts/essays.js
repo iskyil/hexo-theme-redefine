@@ -6,7 +6,7 @@ export default function initEssays() {
   }
 
   dateElements.forEach((element) => {
-    const rawDate = element.getAttribute("data-date");
+    const rawDate = element.getAttribute("datetime");
     const locale = config.language || "en";
 
     const formattedDate = moment(rawDate).locale(locale).calendar();

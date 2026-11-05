@@ -13,7 +13,7 @@
             <% const subtitleText = subtitleConfig.text; %>
             <% const subtitleEntries = Array.isArray(subtitleText) ? subtitleText : subtitleText ? [subtitleText] : []; %>
             <% if (subtitleEntries.length !== 0 || (subtitleConfig.hitokoto && subtitleConfig.hitokoto.enable)) { %>
-                <p><i id="subtitle"></i></p>
+                <p><i id="subtitle"><%= subtitleEntries[0] || '' %></i></p>
             <% } %>
         </div>
 

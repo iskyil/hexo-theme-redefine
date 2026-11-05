@@ -1,7 +1,5 @@
 <%
     const masonryDataUrl = url_for("masonry/data.json");
-    const masonryEntries = (site?.data && (site.data.masonry || site.data.gallery || site.data.photos)) || theme.masonry || theme.gallery || theme.photos;
-    const hasExif = Array.isArray(masonryEntries) && masonryEntries.some((entry) => entry && typeof entry === "object" && entry.exif === true);
 %>
 <div class="py-8 sm:py-0">
     <%- partial('components/page-title', {title: page.title, showBorder: true}) %>
@@ -12,4 +10,3 @@
     </div>
     <div id="masonry-sentinel" class="h-px w-full" aria-hidden="true"></div>
 </div>
-<% if (hasExif) { %><%- renderJS('libs/exif-reader.js', {swupReload: true}) %><% } %>

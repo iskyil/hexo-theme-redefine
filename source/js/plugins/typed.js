@@ -76,8 +76,8 @@ const getHitokotoText = (data) => {
   return author ? `${quote}——${author}` : quote;
 };
 
-const fetchHitokoto = (api) =>
-  fetch(api)
+const fetchHitokoto = (api, signal) =>
+  fetch(api, { signal })
     .then((response) => {
       if (!response.ok) {
         throw new Error(
@@ -106,9 +106,19 @@ export const config = {
   usrHitokotoAPI: hitokotoConfig.api,
 };
 
-export default function initTyped(id) {
+export default function initTyped(id, { signal } = {}) {
+  const element = document.getElementById(id);
+  if (!element || signal?.aborted) return;
+
   const currentToken = (initTokens.get(id) || 0) + 1;
   initTokens.set(id, currentToken);
+  const isCurrent = () =>
+    !signal?.aborted && initTokens.get(id) === currentToken && element.isConnected;
+  signal?.addEventListener("abort", () => {
+    if (initTokens.get(id) !== currentToken) return;
+    initTokens.set(id, currentToken + 1);
+    destroyInstance(id);
+  }, { once: true });
 
   const {
     usrTypeSpeed,
@@ -136,9 +146,9 @@ export default function initTyped(id) {
       return;
     }
 
-    fetchHitokoto(usrHitokotoAPI)
+    fetchHitokoto(usrHitokotoAPI, signal)
       .then((text) => {
-        if (initTokens.get(id) !== currentToken) {
+        if (!isCurrent()) {
           return;
         }
 
@@ -156,17 +166,18 @@ export default function initTyped(id) {
         let refreshRequest = null;
 
         const prefetchNextText = () => {
-          if (refreshRequest || nextText) {
+          if (!isCurrent() || refreshRequest || nextText) {
             return;
           }
 
-          refreshRequest = fetchHitokoto(usrHitokotoAPI)
+          refreshRequest = fetchHitokoto(usrHitokotoAPI, signal)
             .then((nextQuote) => {
-              if (initTokens.get(id) === currentToken) {
+              if (isCurrent()) {
                 nextText = nextQuote;
               }
             })
             .catch((error) => {
+              if (!isCurrent()) return;
               console.error("Failed to refresh hitokoto:", error);
             })
             .finally(() => {
@@ -187,6 +198,7 @@ export default function initTyped(id) {
         });
       })
       .catch((error) => {
+        if (!isCurrent()) return;
         console.error("Failed to fetch hitokoto:", error);
       });
 

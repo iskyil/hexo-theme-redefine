@@ -1,32 +1,3 @@
 <%- renderJS(theme.developer?.enable === true ? 'build/dev/main.js' : 'main.js', {
     module: true
 }) %>
-
-<% const subtitleConfig = theme.home_banner.subtitle || {}; %>
-<% const subtitleText = subtitleConfig.text; %>
-<% const subtitleEntries = Array.isArray(subtitleText)
-    ? subtitleText
-    : subtitleText
-      ? [subtitleText]
-      : []; %>
-<% if (subtitleEntries.length !== 0 || (subtitleConfig.hitokoto && subtitleConfig.hitokoto.enable)) { %>
-  <%- renderJS('libs/Typed.min.js') %>
-<% } %>
-
-<% if (theme.plugins.mermaid.enable) { %>
-    <% if (theme.plugins.mermaid.version === '11.4.1') { %>
-        <%- renderJS('libs/mermaid.min.js') %>
-    <% } else { %>
-        <script src="https://cdn.jsdelivr.net/npm/mermaid@<%= theme.plugins.mermaid.version %>/dist/mermaid.min.js"></script>
-    <% } %>
-<% } %>
-
-<% const isMasonryPage = page.template === "masonry"; %>
-<% if (theme.masonry || theme.photos || theme.gallery || isMasonryPage) { %>
-    <%- renderJS('libs/minimasonry.min.js', { swupReload: true }) %>
-<% } %>
-
-<%- renderJS('libs/moment-with-locales.min.js') %>
-<% if (theme.articles.pangu_js) { %>
-    <%- renderJS('libs/pangu.min.js') %>
-<% } %>

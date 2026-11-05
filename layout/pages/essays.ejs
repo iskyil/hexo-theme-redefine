@@ -10,7 +10,7 @@
             <li class="relative flex w-full flex-row">
                 <div class="mr-4 size-10 shrink-0 overflow-hidden rounded-2xl border border-rd-gray-alpha-400 p-px"><%- image_tag(theme.defaults.avatar, {class: "h-full w-full rounded-[calc(1rem-1px)]"}) %></div>
                 <div class="w-full overflow-hidden rounded-2xl rounded-tl-none border border-rd-gray-alpha-400">
-                    <time data-essay-date datetime="<%= moment(rawDate).tz(timezone).format() %>" class="block border-b border-rd-gray-alpha-400 bg-zinc-50 px-4 py-1.5 text-sm text-rd-gray-900 dark:bg-zinc-800">Loading Date...</time>
+                    <time data-essay-date datetime="<%= moment(rawDate).tz(timezone).format() %>" class="block border-b border-rd-gray-alpha-400 bg-zinc-50 px-4 py-1.5 text-sm text-rd-gray-900 dark:bg-zinc-800"><%= moment(rawDate).tz(timezone).format('YYYY-MM-DD HH:mm') %></time>
                     <div class="essay markdown-body px-4 py-2"><%- markdown(essay.content) %></div>
                 </div>
                 <div class="absolute top-3 left-12 size-2 -rotate-45 transform border-t border-l border-solid border-rd-gray-alpha-400 bg-zinc-50 dark:bg-zinc-800"></div>
