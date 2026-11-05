@@ -8,6 +8,7 @@ const path = require("path");
 const yaml = require("js-yaml");
 const { ensurePrefix } = require("./utils/log-prefix");
 const { version } = require("../package.json");
+const { themeScriptUrl } = require("./utils/asset-url");
 
 /**
  * Export theme config to js
@@ -23,7 +24,22 @@ hexo.extend.helper.register("export_config", function () {
     hexo_config.path = this.config.search.path;
   }
 
+  const mermaidVersion = this.theme.plugins?.mermaid?.version || "11.4.1";
+
   let theme_config = {
+    assets: {
+      moment: themeScriptUrl("libs/moment-with-locales.min.js", this),
+      typed: themeScriptUrl("libs/Typed.min.js", this),
+      masonry: themeScriptUrl("libs/minimasonry.min.js", this),
+      pangu: themeScriptUrl("libs/pangu.min.js", this),
+      exif: themeScriptUrl("libs/exif-reader.js", this),
+      aplayer: themeScriptUrl("libs/APlayer.min.js", this),
+      waline: themeScriptUrl("libs/waline.js", this),
+      mermaid:
+        mermaidVersion === "11.4.1"
+          ? themeScriptUrl("libs/mermaid.min.js", this)
+          : `https://cdn.jsdelivr.net/npm/mermaid@${mermaidVersion}/dist/mermaid.min.js`,
+    },
     articles: this.theme.articles,
     colors: this.theme.colors,
     global: this.theme.global,

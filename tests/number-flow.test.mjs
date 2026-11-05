@@ -53,7 +53,7 @@ test("development JavaScript is bundled locally without import maps", () => {
 
   assert.match(dev, /buildDevelopmentJavaScript\(\{ watch: true \}\)/);
   assert.match(builder, /minify: false/);
-  assert.match(builder, /chunkNames: "chunks\/\[name\]"/);
+  assert.match(builder, /chunkNames: "chunks\/\[name\]-\[hash\]"/);
   assert.match(scripts, /build\/dev\/main\.js/);
   assert.doesNotMatch(config, /importmap|esm\.sh/);
 });

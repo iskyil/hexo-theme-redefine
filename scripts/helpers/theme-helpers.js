@@ -2,10 +2,10 @@
 
 "use strict";
 
-const url = require("url");
 const { ensurePrefix } = require("../utils/log-prefix");
 const { version } = require("../../package.json");
 const themeVersion = version;
+const { themeAssetUrl, themeScriptUrl } = require("../utils/asset-url");
 
 hexo.extend.helper.register("isHomePagePagination", function (pagePath, route) {
   if (pagePath.length > 5 && route === "/") {
@@ -103,123 +103,20 @@ hexo.extend.helper.register("getPostUrl", function (rootUrl, path) {
 });
 
 hexo.extend.helper.register("renderJS", function (path, options = {}) {
-  const _js = hexo.extend.helper.get("js").bind(hexo);
-  const { module = false, async = false, swupReload = false } = options;
-
-  const isDeveloperMode = this.theme.developer?.enable === true;
-
-  if (Array.isArray(path)) {
-    path = path.map((p) => (isDeveloperMode ? "js/" : "js/build/") + p);
-  } else {
-    path = (isDeveloperMode ? "js/" : "js/build/") + path;
-  }
-
-  const cdnProviders = {
-    zstatic:
-      "https://s4.zstatic.net/ajax/libs/hexo-theme-redefine/:version/:path",
-    cdnjs:
-      "https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-redefine/:version/:path",
-    unpkg: "https://unpkg.com/hexo-theme-redefine@:version/source/:path",
-    jsdelivr:
-      "https://cdn.jsdelivr.net/npm/hexo-theme-redefine@:version/source/:path",
-    aliyun:
-      "https://evan.beee.top/projects/hexo-theme-redefine@:version/source/:path",
-    npmmirror:
-      "https://registry.npmmirror.com/hexo-theme-redefine/:version/files/source/:path",
-    custom: this.theme.cdn.custom_url,
-  };
-
-  const cdnPathHandle = (path) => {
-    const cdnBase =
-      cdnProviders[this.theme.cdn.provider] || cdnProviders.npmmirror;
-    let scriptTag;
-
-    const typeAttr = module ? 'type="module"' : "";
-    // const asyncAttr = async ? "async" : "";
-    const swupAttr = swupReload ? "data-swup-reload-script" : "";
-
-    if (this.theme.cdn.enable) {
-      if (this.theme.cdn.provider === "custom") {
-        const customUrl = cdnBase
-          .replace(":version", themeVersion)
-          .replace(":path", path);
-        scriptTag = `<script ${typeAttr} src="${
-          this.theme.cdn.enable ? customUrl : _js({ src: path })
-        }" ${swupAttr}></script>`;
-      } else {
-        scriptTag = `<script ${typeAttr} src="${cdnBase
-          .replace(":version", themeVersion)
-          .replace(":path", path)}" ${swupAttr}></script>`;
-      }
-    } else {
-      scriptTag = _js({
-        src: path,
-        type: module ? "module" : undefined,
-        "data-swup-reload-script": swupReload ? "" : undefined,
-        // async: async,
-      });
-    }
-
-    return scriptTag;
-  };
-
-  let renderedScripts = "";
-
-  if (Array.isArray(path)) {
-    renderedScripts = path.map(cdnPathHandle).join("");
-  } else {
-    renderedScripts = cdnPathHandle(path);
-  }
-
-  return renderedScripts;
+  const js = hexo.extend.helper.get("js").bind(hexo);
+  const { module = false, swupReload = false } = options;
+  const render = (file) => js({
+    src: themeScriptUrl(file, this),
+    type: module ? "module" : undefined,
+    "data-swup-reload-script": swupReload ? "" : undefined,
+  });
+  return Array.isArray(path) ? path.map(render).join("") : render(path);
 });
 
 hexo.extend.helper.register("renderCSS", function (path) {
-  const _css = hexo.extend.helper.get("css").bind(hexo);
-
-  const cdnProviders = {
-    zstatic:
-      "https://s4.zstatic.net/ajax/libs/hexo-theme-redefine/:version/:path",
-    cdnjs:
-      "https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-redefine/:version/:path",
-    unpkg: "https://unpkg.com/hexo-theme-redefine@:version/source/:path",
-    jsdelivr:
-      "https://cdn.jsdelivr.net/npm/hexo-theme-redefine@:version/source/:path",
-    aliyun:
-      "https://evan.beee.top/projects/hexo-theme-redefine@:version/source/:path",
-    npmmirror:
-      "https://registry.npmmirror.com/hexo-theme-redefine/:version/files/source/:path",
-    custom: this.theme.cdn.custom_url,
-  };
-
-  const cdnPathHandle = (path) => {
-    const cdnBase =
-      cdnProviders[this.theme.cdn.provider] || cdnProviders.npmmirror;
-    let cssLink;
-
-    if (this.theme.cdn.enable) {
-      if (this.theme.cdn.provider === "custom") {
-        const customUrl = cdnBase
-          .replace(":version", themeVersion)
-          .replace(":path", path);
-        cssLink = `<link rel="stylesheet" href="${customUrl}">`;
-      } else {
-        cssLink = `<link rel="stylesheet" href="${cdnBase
-          .replace(":version", themeVersion)
-          .replace(":path", path)}">`;
-      }
-    } else {
-      cssLink = _css(path);
-    }
-
-    return cssLink;
-  };
-
-  if (Array.isArray(path)) {
-    return path.map(cdnPathHandle).join("");
-  } else {
-    return cdnPathHandle(path);
-  }
+  const css = hexo.extend.helper.get("css").bind(hexo);
+  const render = (file) => css(themeAssetUrl(file, this));
+  return Array.isArray(path) ? path.map(render).join("") : render(path);
 });
 
 hexo.extend.helper.register("getThemeVersion", function () {

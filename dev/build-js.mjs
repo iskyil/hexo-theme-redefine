@@ -12,22 +12,27 @@ export const buildDevelopmentJavaScript = async ({ watch = false } = {}) => {
 
   const context = await esbuild.context(
     applicationOptions({
-      chunkNames: "chunks/[name]",
+      chunkNames: "chunks/[name]-[hash]",
       minify: false,
       outdir: DEV_BUILD_DIR,
     }),
   );
 
-  await context.rebuild();
-  if (watch) {
-    await context.watch();
-    console.log("✓ Development JavaScript watcher ready");
-    return context;
-  }
+  let watching = false;
+  try {
+    await context.rebuild();
+    if (watch) {
+      await context.watch();
+      watching = true;
+      console.log("✓ Development JavaScript watcher ready");
+      return context;
+    }
 
-  await context.dispose();
-  console.log("✓ Development JavaScript build complete");
-  return null;
+    console.log("✓ Development JavaScript build complete");
+    return null;
+  } finally {
+    if (!watching) await context.dispose();
+  }
 };
 
 if (process.argv[1] === new URL(import.meta.url).pathname) {
