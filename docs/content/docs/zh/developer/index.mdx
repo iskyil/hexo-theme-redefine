@@ -83,7 +83,7 @@ CSS 和 JavaScript 的监听均由 `pnpm dev` 负责，因此这里不单独记�
 | Mermaid     | 启用了 Mermaid，且当前页面存在图表             |
 | MiniMasonry | 当前页面存在相册容器                           |
 | Pangu       | 启用了中英文间距处理，且当前页面存在正文       |
-| 评论 SDK    | 当前页面启用了评论，且评论区接近可视区域       |
+| 评论 SDK    | 评论区已启用并渲染，接近视口或前台停留后空闲   |
 | EXIF 解析器 | 读者首次打开图片的 EXIF 信息面板               |
 | APlayer     | 启用了播放器、配置了音频条目，且存在播放器容器 |
 
@@ -95,7 +95,11 @@ Waline、Gitalk、Twikoo、Giscus、Utterances 和 Artalk 共用评论加载控�
 
 评论控制器在页面替换前销毁 Waline、Artalk 等提供销毁接口的实例。明暗模式通过事件更新已挂载的实例或 iframe，无需轮询等待组件出现。APlayer 属于全站实例，加载后跨 Swup 页面切换保留，并将音频预加载设为 `none`。启用了对应功能时，Swup 和预加载动画所需的初始依赖仍正常加载。
 
-说说模板在构建时输出可读的 `<time>` 内容，Moment 加载后再根据 `datetime` 格式化日期。评论控制器使用 `IntersectionObserver` 提前加载评论，浏览器不支持时直接加载，并提供加载状态与失败重试；Giscus 的 `loading: eager` 设置仍会立即加载。验证改动时，应覆盖直接打开、站内跳转、前进后退、加载期间快速切页、配色切换和失败后重试。
+说说模板在构建时输出可读的 `<time>` 内容，Moment 加载后再根据 `datetime` 格式化日期。
+
+评论控制器使用 `source/js/utils/whenVisibleOrIdle.js` 导出的 `whenVisibleOrIdle()` 调度已启用并渲染的评论区。`IntersectionObserver` 的 `rootMargin` 为 `800px 0px`；另一条触发路径在页面完全加载、标签页连续处于前台 3000ms 后，调用 `requestIdleCallback`（`timeout: 1000`），不支持空闲回调时使用定时器。先满足的条件只触发一次，并取消另一条路径；页面取消信号会清理观察器、定时器和待执行的空闲回调。
+
+标签页隐藏时重置前台停留时间，默认调度不在后台触发；不支持 `IntersectionObserver` 时在前台直接加载。Giscus 的 `loading: eager` 仍立即加载，`lazy` 仍保留 iframe 的原生懒加载。评论区继续提供加载状态和失败重试。验证改动时，应覆盖直接打开、站内跳转、前进后退、加载期间快速切页、前后台切换、配色切换和失败后重试。
 
 ## 预览发布说明
 

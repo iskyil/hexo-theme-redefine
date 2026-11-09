@@ -1,5 +1,5 @@
 import { loadScriptOnce } from "../utils/loadScript.js";
-import { whenVisible } from "../utils/whenVisible.js";
+import { whenVisibleOrIdle } from "../utils/whenVisibleOrIdle.js";
 
 const mounts = new WeakMap();
 
@@ -300,5 +300,5 @@ export default function initTwikoo({ signal } = {}) {
     state.load();
     return;
   }
-  whenVisible(wrapper, state.load, { signal });
+  whenVisibleOrIdle(wrapper, state.load, { signal });
 }

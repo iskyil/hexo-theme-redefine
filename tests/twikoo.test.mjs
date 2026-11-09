@@ -9,7 +9,7 @@ const moduleUrl = (code) =>
   `data:text/javascript;base64,${Buffer.from(code).toString("base64")}`;
 const loadTwikoo = async () => {
   let code = await source("plugins/twikoo.js");
-  for (const name of ["loadScript", "whenVisible"]) {
+  for (const name of ["loadScript", "whenVisibleOrIdle"]) {
     code = code.replace(
       `"../utils/${name}.js"`,
       JSON.stringify(moduleUrl(await source(`utils/${name}.js`))),
@@ -57,7 +57,8 @@ const fixture = (t) => {
       "[data-comment-retry]": retry,
       "[data-twikoo-mount]": container,
     })[selector];
-  globalThis.document = {
+  globalThis.document = Object.assign(new EventTarget(), {
+    readyState: "complete",
     baseURI: "https://blog.example/",
     querySelector: () => wrapper,
     createElement: () => ({ remove() {} }),
@@ -66,9 +67,9 @@ const fixture = (t) => {
         scripts.push(script);
       },
     },
-  };
+  });
   globalThis.location = { pathname: "/first/" };
-  globalThis.window = {
+  globalThis.window = Object.assign(new EventTarget(), {
     i18n: { comments_loading: "Loading", comments_load_failed: "Failed" },
     twikoo: {
       async init(options) {
@@ -77,7 +78,7 @@ const fixture = (t) => {
         options.el.isConnected = false;
       },
     },
-  };
+  });
   globalThis.IntersectionObserver = class {
     constructor(callback) {
       this.callback = callback;
@@ -123,6 +124,41 @@ test("navigation while the vendor is loading never mounts the departed page", as
   f.scripts[0].onload();
   await flush();
   assert.equal(f.calls.length, 0);
+});
+
+test("Twikoo loads after a stationary visit and reuses its SDK on another page", async (t) => {
+  const initTwikoo = await loadTwikoo();
+  const f = fixture(t);
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  const page = new AbortController();
+  initTwikoo({ signal: page.signal });
+  t.mock.timers.tick(2999);
+  assert.equal(f.scripts.length, 0);
+  t.mock.timers.tick(1);
+  assert.equal(f.scripts.length, 1);
+  f.scripts[0].onload();
+  await flush();
+  assert.equal(f.calls.length, 1);
+  assert.equal(f.status.hidden, true);
+  f.observers[0].callback([{ isIntersecting: true }]);
+  assert.equal(f.calls.length, 1);
+  page.abort();
+
+  const nextContainer = { ...f.container };
+  document.querySelector = () => ({
+    ...f.wrapper,
+    querySelector: (selector) =>
+      selector === "[data-twikoo-mount]"
+        ? nextContainer
+        : f.wrapper.querySelector(selector),
+  });
+  location.pathname = "/second/";
+  initTwikoo({ signal: new AbortController().signal });
+  t.mock.timers.tick(3000);
+  await flush();
+  assert.equal(f.scripts.length, 1);
+  assert.equal(f.calls.length, 2);
+  assert.equal(f.calls[1].path, "/second/");
 });
 
 test("a scope refresh shares pending initialization and a failed mount can retry", async (t) => {

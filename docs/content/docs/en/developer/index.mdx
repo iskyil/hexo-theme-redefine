@@ -108,16 +108,16 @@ loads feature modules and their dependencies according to the configuration
 and current DOM. New optional features should use this page initialization
 flow and check the page's abort signal after asynchronous loading completes.
 
-| Dependency   | Loading condition                                                                         |
-| ------------ | ----------------------------------------------------------------------------------------- |
-| Moment       | The current page contains essay dates                                                     |
-| Typed        | Subtitle animation is enabled and the current page contains its container                 |
-| Mermaid      | Mermaid is enabled and the current page contains a diagram                                |
-| MiniMasonry  | The current page contains a gallery container                                             |
-| Pangu        | Chinese/English spacing is enabled and the current page contains article content          |
-| Comment SDKs | Comments are enabled for the current page and the comment section approaches the viewport |
-| EXIF reader  | The reader first opens an image's EXIF information panel                                  |
-| APlayer      | The player is enabled, audio entries are configured, and a player container is present    |
+| Dependency   | Loading condition                                                                      |
+| ------------ | -------------------------------------------------------------------------------------- |
+| Moment       | The current page contains essay dates                                                  |
+| Typed        | Subtitle animation is enabled and the current page contains its container              |
+| Mermaid      | Mermaid is enabled and the current page contains a diagram                             |
+| MiniMasonry  | The current page contains a gallery container                                          |
+| Pangu        | Chinese/English spacing is enabled and the current page contains article content       |
+| Comment SDKs | Enabled comments approach the viewport or reach idle time after foreground dwell       |
+| EXIF reader  | The reader first opens an image's EXIF information panel                               |
+| APlayer      | The player is enabled, audio entries are configured, and a player container is present |
 
 Use dynamic `import()` for ES modules and the shared `loadScriptOnce()` for
 third-party scripts that expose globals. The loader caches promises by URL,
@@ -148,12 +148,25 @@ for audio preloading. Swup and preloader animation dependencies still load
 initially when their corresponding features are enabled.
 
 The essays template renders readable `<time>` content at build time; after
-Moment loads, the browser formats dates from `datetime`. The comment controller
-uses `IntersectionObserver` to load comments ahead of the viewport, loads
-immediately when that API is unavailable, and provides loading feedback and
-retry after failure. Giscus still loads immediately when `loading: eager` is
-set. Validate direct entry, internal navigation, back/forward navigation, rapid
-navigation during loading, color-mode changes, and retry after a failed load.
+Moment loads, the browser formats dates from `datetime`.
+
+The comment controller schedules enabled, rendered comment sections with
+`whenVisibleOrIdle()` from `source/js/utils/whenVisibleOrIdle.js`.
+`IntersectionObserver` uses `rootMargin: "800px 0px"`. The alternative trigger
+waits for the page to finish loading and the tab to remain in the foreground
+for 3000ms, then calls `requestIdleCallback` with `timeout: 1000`, or a timer
+when idle callbacks are unavailable. The first trigger runs once and cancels
+the other path. The page abort signal cleans up the observer, timer, and pending
+idle callback.
+
+Hiding the tab resets the foreground waiting period, and the default scheduler
+does not trigger in the background. Without `IntersectionObserver`, loading
+starts immediately in the foreground. Giscus still loads immediately with
+`loading: eager`, while `lazy`
+retains native iframe lazy loading. Loading feedback and retry remain available.
+Validate direct entry, internal navigation, back/forward navigation, rapid
+navigation during loading, foreground/background transitions, color-mode changes,
+and retry after a failed load.
 
 ## Preview Release Notes
 

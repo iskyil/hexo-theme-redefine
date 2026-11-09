@@ -32,10 +32,19 @@ Enable or disable comments.
 
 ## Loading Behavior
 
-All six comment systems load when the comment section approaches the viewport,
-with no extra configuration required. Browsers without visibility observation
-support load them immediately. Setting `comment.config.giscus.loading: eager`
-still loads Giscus immediately.
+By default, all six comment systems load when the comment section is within
+about 800px of the viewport, or during browser idle time after the page has
+finished loading and the tab has remained in the foreground for 3 seconds.
+Whichever condition occurs first triggers loading once, with no extra
+configuration required. This applies only to enabled comment sections rendered
+on the current page.
+
+Moving the tab into the background resets the foreground waiting period; the
+default loading strategy does not trigger in the background. Browsers without
+visibility observation support load comments immediately while the tab is in
+the foreground. Setting
+`comment.config.giscus.loading: eager` still loads Giscus immediately; `lazy`
+continues to use native browser lazy loading for its iframe.
 
 The comment section displays loading feedback and offers a retry button if
 loading fails. When readers follow an internal link to another article, the
